@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 class SplashScreen extends StatefulWidget {
-  //route name for our screen
   static String routeName = 'SplashScreen';
 
   @override
@@ -11,38 +10,42 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    //we use future to go from one screen to other via duration time
-    Future.delayed(Duration(seconds: 5), (){
-      //no return when user is on login screen and press back, it will not return the
-      //user to the splash screen
-      Navigator.pushNamedAndRemoveUntil(context, LoginScreen.routeName, (route) => false);
+    Future.delayed(Duration(seconds: 5), () {
+      Navigator.pushNamedAndRemoveUntil(
+          context, LoginScreen.routeName, (route) => false);
     });
   }
+
   @override
   Widget build(BuildContext context) {
-    //scaffold color set to primary color in main in our text theme
     return Scaffold(
-      //its a row with a column
       body: Center(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('School', style: Theme.of(context).textTheme.headlineSmall),
-                Text('Brain', style: Theme.of(context).textTheme.headlineSmall),
-              ],
-            ),
+
+            /// --- LOGO FULL WIDTH ---
             Image.asset(
-              'assets/images/splash.png',
-              //25% of height & 50% of width
-              height: 25.h,
-              width: 50.w,
+              'assets/images/splash2.png',
+              width: 100.w,       // full screen width
+              height: 30.h,       // adjust height as needed
+              fit: BoxFit.cover,  // covers from end to end
+            ),
+
+            SizedBox(height: 4.h),
+
+            /// --- TEXT BELOW LOGO ---
+            Text(
+              'Sri Ram',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            Text(
+              "Girl's PG",
+              style: Theme.of(context).textTheme.headlineSmall,
             ),
           ],
         ),

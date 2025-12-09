@@ -52,7 +52,7 @@ class MyProfileScreen extends StatelessWidget {
                         SizerUtil.deviceType == DeviceType.tablet ? 12.w : 13.w,
                     backgroundColor: kSecondaryColor,
                     backgroundImage:
-                        AssetImage('assets/images/student_profile.jpeg'),
+                        AssetImage('assets/images/img.png'),
                   ),
                   kWidthSizedBox,
                   Column(
@@ -60,7 +60,7 @@ class MyProfileScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Aisha Mirza',
+                        'Aryan singh',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       Text('Class X-II A | Roll no: 12',

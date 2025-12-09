@@ -17,7 +17,6 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       body: Column(
         children: [
-          //we will divide the screen into two parts
           //fixed height for first half
           Container(
             width: 100.w,
@@ -33,20 +32,18 @@ class HomeScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         StudentName(
-                          studentName: 'Aisha',
+                          studentName: 'Aryan',
                         ),
                         kHalfSizedBox,
-                        StudentClass(
-                            studentClass: 'Class X-II A | Roll no: 12'),
+                        StudentClass(studentClass: 'EX:Student ID'),
                         kHalfSizedBox,
-                        StudentYear(studentYear: '2020-2021'),
+                        StudentYear(studentYear: 'May-June'),
                       ],
                     ),
                     kHalfSizedBox,
                     StudentPicture(
-                        picAddress: 'assets/images/student_profile.jpeg',
+                        picAddress: 'assets/images/img.png',
                         onPress: () {
-                          // go to profile detail screen here
                           Navigator.pushNamed(
                               context, MyProfileScreen.routeName);
                         }),
@@ -57,19 +54,16 @@ class HomeScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     StudentDataCard(
-                      onPress: () {
-                        //go to attendance screen
-                      },
+                      onPress: () {},
                       title: 'Attendance',
                       value: '90.02%',
                     ),
                     StudentDataCard(
                       onPress: () {
-                        //go to fee due screen
                         Navigator.pushNamed(context, FeeScreen.routeName);
                       },
                       title: 'Fees Due',
-                      value: '600\$',
+                      value: '600 rupees',
                     ),
                   ],
                 )
@@ -77,7 +71,7 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
 
-          //other will use all the remaining height of screen
+          // Remaining bottom section
           Expanded(
             child: Container(
               width: 100.w,
@@ -86,108 +80,72 @@ class HomeScreen extends StatelessWidget {
                 borderRadius: kTopBorderRadius,
               ),
               child: SingleChildScrollView(
-                //for padding
                 physics: BouncingScrollPhysics(),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        HomeCard(
-                          onPress: () {},
-                          icon: 'assets/icons/quiz.svg',
-                          title: 'Take Quiz',
-                        ),
-                        HomeCard(
-                          onPress: () {
-                            //go to assignment screen here
-                            Navigator.pushNamed(
-                                context, AssignmentScreen.routeName);
-                          },
-                          icon: 'assets/icons/assignment.svg',
-                          title: 'Assignments',
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        HomeCard(
-                          onPress: () {},
-                          icon: 'assets/icons/holiday.svg',
-                          title: 'Holidays',
-                        ),
-                        HomeCard(
-                          onPress: () {},
-                          icon: 'assets/icons/timetable.svg',
-                          title: 'Time Table',
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        HomeCard(
-                          onPress: () {},
-                          icon: 'assets/icons/result.svg',
-                          title: 'Result',
-                        ),
-                        HomeCard(
-                          onPress: () {
-                            Navigator.pushNamed(
-                                context, DateSheetScreen.routeName);
-                          },
-                          icon: 'assets/icons/datesheet.svg',
-                          title: 'DateSheet',
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        HomeCard(
-                          onPress: () {},
-                          icon: 'assets/icons/ask.svg',
-                          title: 'Ask',
-                        ),
-                        HomeCard(
-                          onPress: () {},
-                          icon: 'assets/icons/gallery.svg',
-                          title: 'Gallery',
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        HomeCard(
-                          onPress: () {},
-                          icon: 'assets/icons/resume.svg',
-                          title: 'Leave\nApplication',
-                        ),
-                        HomeCard(
-                          onPress: () {},
-                          icon: 'assets/icons/lock.svg',
-                          title: 'Change\nPassword',
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        HomeCard(
-                          onPress: () {},
-                          icon: 'assets/icons/event.svg',
-                          title: 'Events',
-                        ),
-                        HomeCard(
-                          onPress: () {},
-                          icon: 'assets/icons/logout.svg',
-                          title: 'Logout',
-                        ),
-                      ],
-                    ),
-                  ],
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 2.h),
+                  child: Wrap(
+                    spacing: 1.h, // space between columns
+                    runSpacing: 1.5.h, // space between rows
+                    alignment: WrapAlignment.center,
+                    children: [
+                      HomeCard(
+                        onPress: () {
+                          Navigator.pushNamed(
+                              context, AssignmentScreen.routeName);
+                        },
+                        icon: 'assets/icons/assignment.svg',
+                        title: 'Complain',
+                      ),
+                      HomeCard(
+                        onPress: () {},
+                        icon: 'assets/icons/holiday.svg',
+                        title: 'Holidays',
+                      ),
+                      HomeCard(
+                        onPress: () {},
+                        icon: 'assets/icons/timetable.svg',
+                        title: 'Time Table',
+                      ),
+                      HomeCard(
+                        onPress: () {},
+                        icon: 'assets/icons/result.svg',
+                        title: 'Result',
+                      ),
+                      HomeCard(
+                        onPress: () {
+                          Navigator.pushNamed(
+                              context, DateSheetScreen.routeName);
+                        },
+                        icon: 'assets/icons/datesheet.svg',
+                        title: 'DateSheet',
+                      ),
+                      HomeCard(
+                        onPress: () {},
+                        icon: 'assets/icons/ask.svg',
+                        title: 'Ask',
+                      ),
+                      HomeCard(
+                        onPress: () {},
+                        icon: 'assets/icons/gallery.svg',
+                        title: 'Gallery',
+                      ),
+                      HomeCard(
+                        onPress: () {},
+                        icon: 'assets/icons/lock.svg',
+                        title: 'Change\nPassword',
+                      ),
+                      HomeCard(
+                        onPress: () {},
+                        icon: 'assets/icons/event.svg',
+                        title: 'Events',
+                      ),
+                      HomeCard(
+                        onPress: () {},
+                        icon: 'assets/icons/logout.svg',
+                        title: 'Logout',
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -201,35 +159,36 @@ class HomeScreen extends StatelessWidget {
 class HomeCard extends StatelessWidget {
   const HomeCard(
       {Key? key,
-      required this.onPress,
-      required this.icon,
-      required this.title})
+        required this.onPress,
+        required this.icon,
+        required this.title})
       : super(key: key);
+
   final VoidCallback onPress;
   final String icon;
   final String title;
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onPress,
       child: Container(
-        margin: EdgeInsets.only(top: 1.h),
-        width: 40.w,
-        height: 20.h,
+        width: 42.w,
+        height: 18.h,
         decoration: BoxDecoration(
           color: kPrimaryColor,
           borderRadius: BorderRadius.circular(kDefaultPadding / 2),
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SvgPicture.asset(
               icon,
-              height: SizerUtil.deviceType == DeviceType.tablet ? 30.sp : 40.sp,
-              width: SizerUtil.deviceType == DeviceType.tablet ? 30.sp : 40.sp,
+              height: SizerUtil.deviceType == DeviceType.tablet ? 28.sp : 36.sp,
+              width: SizerUtil.deviceType == DeviceType.tablet ? 28.sp : 36.sp,
               color: kOtherColor,
             ),
+            SizedBox(height: 1.h),
             Text(
               title,
               textAlign: TextAlign.center,
