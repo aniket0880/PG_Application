@@ -53,11 +53,7 @@ class HomeScreen extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    StudentDataCard(
-                      onPress: () {},
-                      title: 'Attendance',
-                      value: '90.02%',
-                    ),
+                    
                     StudentDataCard(
                       onPress: () {
                         Navigator.pushNamed(context, FeeScreen.routeName);

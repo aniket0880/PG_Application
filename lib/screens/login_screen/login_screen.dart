@@ -1,10 +1,10 @@
 import 'package:untitled/components/custom_buttons.dart';
 import 'package:untitled/constants.dart';
 import 'package:untitled/screens/home_screen/home_screen.dart';
+import 'package:untitled/screens/AdminScreens/admin_home.dart'; // make sure this file exists
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
-
-late bool _passwordVisible;
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
   static String routeName = 'LoginScreen';
@@ -14,21 +14,94 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  //validate our form now
+  // form key
   final _formKey = GlobalKey<FormState>();
 
-  //changes current state
+  // controllers
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  // state
+  bool _passwordVisible = true;
+  bool _isLoading = false;
+
+  // Admin emails (case-insensitive). Replace these with your real admin emails.
+  static const List<String> adminEmails = [
+    'aniket.ashok2022@vitstudent.ac.in',
+    'admin2@example.com',
+  ];
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _passwordVisible = true;
   }
 
   @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _signIn() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Determine destination based on whether the signed-in email is in adminEmails
+      final normalized = email.toLowerCase();
+      final isAdmin = adminEmails.map((e) => e.toLowerCase()).contains(normalized);
+
+      if (isAdmin) {
+        // navigate to admin home (clear stack)
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AdminHome.routeName,
+              (route) => false,
+        );
+      } else {
+        // normal user -> client home
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          HomeScreen.routeName,
+              (route) => false,
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      String msg = 'Login failed';
+      if (e.code == 'user-not-found') {
+        msg = 'No user found for that email. Please sign up.';
+      } else if (e.code == 'wrong-password') {
+        msg = 'Wrong password provided for that user.';
+      } else if (e.code == 'invalid-email') {
+        msg = 'The email address is not valid.';
+      } else if (e.code == 'too-many-requests') {
+        msg = 'Too many attempts. Try again later.';
+      } else if (e.message != null) {
+        msg = e.message!;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      //when user taps anywhere on the screen, keyboard hides
+      // when user taps anywhere on the screen, keyboard hides
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
         body: Column(
@@ -51,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                   Image.asset(
-                    'assets/images/splash2.png',
+                    'assets/images/img_1.png',
                     height: 20.h,
                     width: 40.w,
                   ),
@@ -66,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 padding: EdgeInsets.only(left: 5.w, right: 5.w),
                 decoration: BoxDecoration(
                   color: kOtherColor,
-                  //reusable radius,
+                  // reusable radius,
                   borderRadius: kTopBorderRadius,
                 ),
                 child: Form(
@@ -79,28 +152,30 @@ class _LoginScreenState extends State<LoginScreen> {
                         sizedBox,
                         buildPasswordField(),
                         sizedBox,
-                        DefaultButton(
-                          onPress: () {
-                            if (_formKey.currentState!.validate()) {
-                              Navigator.pushNamedAndRemoveUntil(context,
-                                  HomeScreen.routeName, (route) => false);
-                            }
-                          },
+                        _isLoading
+                            ? Center(child: CircularProgressIndicator())
+                            : DefaultButton(
+                          onPress: _signIn,
                           title: 'SIGN IN',
                           iconData: Icons.arrow_forward_outlined,
                         ),
                         sizedBox,
                         Align(
                           alignment: Alignment.bottomRight,
-                          child: Text(
-                            'Forgot Password',
-                            textAlign: TextAlign.end,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall!
-                                .copyWith(
-                                    color: kPrimaryColor,
-                                    fontWeight: FontWeight.w500),
+                          child: TextButton(
+                            onPressed: () {
+                              // TODO: implement password reset flow or navigate to reset page
+                            },
+                            child: Text(
+                              'Forgot Password',
+                              textAlign: TextAlign.end,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall!
+                                  .copyWith(
+                                  color: kPrimaryColor,
+                                  fontWeight: FontWeight.w500),
+                            ),
                           ),
                         ),
                       ],
@@ -117,6 +192,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   TextFormField buildEmailField() {
     return TextFormField(
+      controller: _emailController,
       textAlign: TextAlign.start,
       keyboardType: TextInputType.emailAddress,
       style: kInputTextStyle,
@@ -125,21 +201,22 @@ class _LoginScreenState extends State<LoginScreen> {
         floatingLabelBehavior: FloatingLabelBehavior.always,
       ),
       validator: (value) {
-        //for validation
-        RegExp regExp = new RegExp(emailPattern);
+        // for validation
+        RegExp regExp = RegExp(emailPattern);
         if (value == null || value.isEmpty) {
           return 'Please enter some text';
-          //if it does not matches the pattern, like
-          //it not contains @
+          // if it does not match the pattern, like it not contains @
         } else if (!regExp.hasMatch(value)) {
           return 'Please enter a valid email address';
         }
+        return null;
       },
     );
   }
 
   TextFormField buildPasswordField() {
     return TextFormField(
+      controller: _passwordController,
       obscureText: _passwordVisible,
       textAlign: TextAlign.start,
       keyboardType: TextInputType.visiblePassword,
@@ -154,17 +231,17 @@ class _LoginScreenState extends State<LoginScreen> {
             });
           },
           icon: Icon(
-            _passwordVisible
-                ? Icons.visibility_off_outlined
-                : Icons.visibility_off_outlined,
+            _passwordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
           ),
           iconSize: kDefaultPadding,
         ),
       ),
       validator: (value) {
-        if (value!.length < 5) {
-          return 'Must be more than 5 characters';
+        if (value == null || value.isEmpty) return 'Please enter a password';
+        if (value.length < 6) {
+          return 'Must be at least 6 characters';
         }
+        return null;
       },
     );
   }

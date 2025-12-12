@@ -1,6 +1,7 @@
 import 'package:untitled/screens/login_screen/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'package:untitled/screens/login_screen/signup_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   static String routeName = 'SplashScreen';
@@ -16,7 +17,8 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     Future.delayed(Duration(seconds: 5), () {
       Navigator.pushNamedAndRemoveUntil(
-          context, LoginScreen.routeName, (route) => false);
+          context, SignupScreen
+          .routeName, (route) => false);
     });
   }
 
@@ -30,7 +32,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
             /// --- LOGO FULL WIDTH ---
             Image.asset(
-              'assets/images/splash2.png',
+              'assets/images/img_1.png',
               width: 100.w,       // full screen width
               height: 30.h,       // adjust height as needed
               fit: BoxFit.cover,  // covers from end to end

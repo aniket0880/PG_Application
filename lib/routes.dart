@@ -1,4 +1,6 @@
+import 'package:untitled/screens/AdminScreens/admin_home.dart';
 import 'package:untitled/screens/login_screen/login_screen.dart';
+import 'package:untitled/screens/login_screen/signup_screen.dart';
 import 'package:untitled/screens/splash_screen/splash_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'screens/assignment_screen/assignment_screen.dart';
@@ -9,6 +11,7 @@ import 'screens/my_profile/my_profile.dart';
 
 Map<String, WidgetBuilder> routes = {
   //all screens will be registered here like manifest in android
+  SignupScreen.routeName: (context) => SignupScreen(),
   SplashScreen.routeName: (context) => SplashScreen(),
   LoginScreen.routeName: (context) => LoginScreen(),
   HomeScreen.routeName: (context) => HomeScreen(),
@@ -16,4 +19,7 @@ Map<String, WidgetBuilder> routes = {
   FeeScreen.routeName: (context) => FeeScreen(),
   AssignmentScreen.routeName: (context) => AssignmentScreen(),
   DateSheetScreen.routeName: (context) => DateSheetScreen(),
+
+  AdminHome.routeName: (context) => AdminHome(),
+
 };
