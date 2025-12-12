@@ -6,8 +6,10 @@ class AssignmentDetailRow extends StatelessWidget {
   const AssignmentDetailRow(
       {Key? key, required this.title, required this.statusValue})
       : super(key: key);
+
   final String title;
   final String statusValue;
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -32,6 +34,7 @@ class AssignmentDetailRow extends StatelessWidget {
 class AssignmentButton extends StatelessWidget {
   const AssignmentButton({Key? key, required this.title, required this.onPress})
       : super(key: key);
+
   final String title;
   final VoidCallback onPress;
 
@@ -55,7 +58,10 @@ class AssignmentButton extends StatelessWidget {
         child: Center(
           child: Text(
             title,
-            style: Theme.of(context).textTheme.titleSmall
+            style: Theme.of(context)
+                .textTheme
+                .titleSmall!
+                .copyWith(color: Colors.black), // <-- UPDATED TEXT COLOR
           ),
         ),
       ),

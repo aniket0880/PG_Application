@@ -1,6 +1,6 @@
 import 'package:untitled/constants.dart';
-import 'package:untitled/screens/assignment_screen/assignment_screen.dart';
-import 'package:untitled/screens/datesheet_screen/datesheet_screen.dart';
+import 'package:untitled/screens/Complain/assignment_screen.dart';
+import 'package:untitled/screens/messmenu_screen/datesheet_screen.dart';
 import 'package:untitled/screens/fee_screen/fee_screen.dart';
 import 'package:untitled/screens/my_profile/my_profile.dart';
 import 'package:flutter/material.dart';
@@ -87,44 +87,26 @@ class HomeScreen extends StatelessWidget {
                       HomeCard(
                         onPress: () {
                           Navigator.pushNamed(
-                              context, AssignmentScreen.routeName);
+                              context, ComplaintScreen.routeName);
                         },
                         icon: 'assets/icons/assignment.svg',
                         title: 'Complain',
                       ),
-                      HomeCard(
-                        onPress: () {},
-                        icon: 'assets/icons/holiday.svg',
-                        title: 'Holidays',
-                      ),
-                      HomeCard(
-                        onPress: () {},
-                        icon: 'assets/icons/timetable.svg',
-                        title: 'Time Table',
-                      ),
-                      HomeCard(
-                        onPress: () {},
-                        icon: 'assets/icons/result.svg',
-                        title: 'Result',
-                      ),
+
                       HomeCard(
                         onPress: () {
                           Navigator.pushNamed(
-                              context, DateSheetScreen.routeName);
+                              context, MessMenuScreen.routeName);
                         },
                         icon: 'assets/icons/datesheet.svg',
-                        title: 'DateSheet',
+                        title: 'Mess Menu',
                       ),
                       HomeCard(
                         onPress: () {},
                         icon: 'assets/icons/ask.svg',
                         title: 'Ask',
                       ),
-                      HomeCard(
-                        onPress: () {},
-                        icon: 'assets/icons/gallery.svg',
-                        title: 'Gallery',
-                      ),
+
                       HomeCard(
                         onPress: () {},
                         icon: 'assets/icons/lock.svg',

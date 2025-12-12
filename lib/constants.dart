@@ -5,7 +5,7 @@ import 'package:sizer/sizer.dart';
 //colors
 const Color kPrimaryColor = Color(0xFF345FB4);
 const Color kSecondaryColor = Color(0xFF6789CA);
-const Color kTextBlackColor = Color(0xFF313131);
+const Color kTextBlackColor = Color(0xFF0C0C0C);
 const Color kTextWhiteColor = Color(0xFFFFFFFF);
 const Color kContainerColor = Color(0xFF777777);
 const Color kOtherColor = Color(0xFFF4F6F7);

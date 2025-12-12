@@ -3,11 +3,13 @@ import 'package:untitled/screens/login_screen/login_screen.dart';
 import 'package:untitled/screens/login_screen/signup_screen.dart';
 import 'package:untitled/screens/splash_screen/splash_screen.dart';
 import 'package:flutter/cupertino.dart';
-import 'screens/assignment_screen/assignment_screen.dart';
-import 'screens/datesheet_screen/datesheet_screen.dart';
+import 'screens/Complain/assignment_screen.dart';
+import 'screens/messmenu_screen/datesheet_screen.dart';
 import 'screens/fee_screen/fee_screen.dart';
 import 'screens/home_screen/home_screen.dart';
 import 'screens/my_profile/my_profile.dart';
+import 'package:untitled/screens/AdminScreens/admin_complaints_screen.dart';
+import 'package:untitled/screens/AdminScreens/admin_mess_menu_screen.dart';
 
 Map<String, WidgetBuilder> routes = {
   //all screens will be registered here like manifest in android
@@ -17,9 +19,12 @@ Map<String, WidgetBuilder> routes = {
   HomeScreen.routeName: (context) => HomeScreen(),
   MyProfileScreen.routeName: (context) => MyProfileScreen(),
   FeeScreen.routeName: (context) => FeeScreen(),
-  AssignmentScreen.routeName: (context) => AssignmentScreen(),
-  DateSheetScreen.routeName: (context) => DateSheetScreen(),
+  ComplaintScreen.routeName: (context) => ComplaintScreen(),
+  MessMenuScreen.routeName: (context) => MessMenuScreen(),
 
   AdminHome.routeName: (context) => AdminHome(),
+  AdminComplaints.routeName: (context) => AdminComplaintsScreen(),
+
+  AdminMessMenu.routeName: (ctx) => AdminMessMenuScreen(),
 
 };
