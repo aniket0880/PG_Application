@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:untitled/constants.dart';
 import 'package:untitled/screens/Complain/assignment_screen.dart';
 import 'package:untitled/screens/messmenu_screen/datesheet_screen.dart';
@@ -118,7 +119,10 @@ class HomeScreen extends StatelessWidget {
                         title: 'Events',
                       ),
                       HomeCard(
-                        onPress: () {},
+                        onPress: () async {
+                          await FirebaseAuth.instance.signOut();
+                          Navigator.pushNamedAndRemoveUntil(context, 'LoginScreen', (r) => false);
+                        },
                         icon: 'assets/icons/logout.svg',
                         title: 'Logout',
                       ),
