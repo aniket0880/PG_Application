@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "4946936630",
+    "project_id": "pg-app-8370b",
+    "storage_bucket": "pg-app-8370b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:4946936630:android:29b3a40f6328870e9ea997",
+        "android_client_info": {
+          "package_name": "com.example.untitled"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzarlYK-q0LCpmcZI2YOTAUZFnPXrRGPw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

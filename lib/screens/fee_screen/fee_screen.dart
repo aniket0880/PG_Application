@@ -1,104 +1,348 @@
-import 'package:untitled/constants.dart';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:untitled/constants.dart';
 
-import 'data/fee_data.dart';
-import 'widgets/fee_widgets.dart';
+// PDF
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:path_provider/path_provider.dart';
+import 'package:open_file/open_file.dart';
 
-class FeeScreen extends StatelessWidget {
+class FeeScreen extends StatefulWidget {
   const FeeScreen({Key? key}) : super(key: key);
   static String routeName = 'FeeScreen';
 
   @override
+  State<FeeScreen> createState() => _FeeScreenState();
+}
+
+class _FeeScreenState extends State<FeeScreen> {
+  late Razorpay _razorpay;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  String _currentPaymentType = '';
+  int _currentAmount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handleSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handleError);
+  }
+
+  @override
+  void dispose() {
+    _razorpay.clear();
+    super.dispose();
+  }
+
+  // -------------------- PAYMENT HANDLERS --------------------
+
+  Future<void> _handleSuccess(PaymentSuccessResponse response) async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) return;
+
+    await _firestore.collection('payments').add({
+      'userId': user.uid,
+      'type': _currentPaymentType,
+      'amount': _currentAmount,
+      'razorpayPaymentId': response.paymentId,
+      'status': 'success',
+      'createdAt': FieldValue.serverTimestamp(),
+      'receiptNo': 'PG-${DateTime
+          .now()
+          .millisecondsSinceEpoch}',
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Payment Successful')),
+    );
+  }
+
+  void _handleError(PaymentFailureResponse response) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Payment Failed')),
+    );
+  }
+
+  // -------------------- START PAYMENT --------------------
+
+  void _startPayment({
+    required int amount,
+    required String type,
+    required String description,
+  }) {
+    _currentPaymentType = type;
+    _currentAmount = amount;
+
+    var options = {
+      'key': 'rzp_test_RryzsRvdqyuVWV',
+      'amount': amount * 100, // paise
+      'name': 'Sri Ram Girls PG',
+      'description': description,
+      'prefill': {
+        'contact': '9000000000',
+        'email': FirebaseAuth.instance.currentUser?.email ?? '',
+      },
+      'method': {
+        'upi': true,
+        'card': true,
+        'netbanking': true,
+        'wallet': true,
+      }
+    };
+
+    _razorpay.open(options);
+  }
+
+  // -------------------- PDF RECEIPT --------------------
+
+  Future<void> _downloadReceipt(Map<String, dynamic> data) async {
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                'Sri Ram Girls PG',
+                style: pw.TextStyle(
+                  fontSize: 24,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+              pw.SizedBox(height: 12),
+              pw.Text('Payment Receipt'),
+              pw.Divider(),
+
+              pw.Text('Receipt No: ${data['receiptNo']}'),
+              pw.Text('Payment Type: ${data['type']}'),
+              pw.Text('Amount Paid: ₹${data['amount']}'),
+              pw.Text('Payment ID: ${data['razorpayPaymentId']}'),
+              pw.Text('Status: ${data['status']}'),
+
+              pw.SizedBox(height: 20),
+              pw.Text(
+                'Thank you for your payment.',
+                style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File('${dir.path}/${data['receiptNo']}.pdf');
+    await file.writeAsBytes(await pdf.save());
+
+    await OpenFile.open(file.path);
+  }
+
+  // -------------------- UI --------------------
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Fee'),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: kTopBorderRadius,
-                color: kOtherColor,
-              ),
-              child: ListView.builder(
-                  physics: BouncingScrollPhysics(),
-                  padding: EdgeInsets.all(kDefaultPadding),
-                  itemCount: fee.length,
-                  itemBuilder: (context, int index) {
-                    return Container(
-                      margin: EdgeInsets.only(bottom: kDefaultPadding),
-                      child: Column(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(kDefaultPadding),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(kDefaultPadding),
-                              ),
-                              color: Colors.white,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: kTextLightColor,
-                                  blurRadius: 2.0,
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              children: [
-                                FeeDetailRow(
-                                  title: 'Receipt No',
-                                  statusValue: fee[index].receiptNo,
-                                ),
-                                SizedBox(
-                                  height: kDefaultPadding,
-                                  child: Divider(
-                                    thickness: 1.0,
-                                  ),
-                                ),
-                                FeeDetailRow(
-                                  title: 'Month',
-                                  statusValue: fee[index].month,
-                                ),
-                                sizedBox,
-                                FeeDetailRow(
-                                  title: 'Payment Date',
-                                  statusValue: fee[index].date,
-                                ),
-                                sizedBox,
-                                FeeDetailRow(
-                                  title: 'Status',
-                                  statusValue: fee[index].paymentStatus,
-                                ),
-                                sizedBox,
-                                SizedBox(
-                                  height: kDefaultPadding,
-                                  child: Divider(
-                                    thickness: 1.0,
-                                  ),
-                                ),
-                                FeeDetailRow(
-                                  title: 'Total Amount',
-                                  statusValue: fee[index].totalAmount,
-                                ),
-                              ],
-                            ),
-                          ),
-                          FeeButton(
-                              title: fee[index].btnStatus,
-                              iconData: fee[index].btnStatus == 'Paid'
-                                  ? Icons.download_outlined
-                                  : Icons.arrow_forward_outlined,
-                              onPress: () {})
-                        ],
-                      ),
-                    );
-                  }),
+      appBar: AppBar(title: const Text('Payments')),
+      body: Container(
+        padding: EdgeInsets.all(kDefaultPadding),
+        decoration: BoxDecoration(
+          color: kOtherColor,
+          borderRadius: kTopBorderRadius,
+        ),
+        child: Column(
+          children: [
+            _paymentCard(
+              title: '6 Month Rent + Mess',
+              amount: '₹60,000',
+              onPay: () =>
+                  _startPayment(
+                    amount: 60000,
+                    type: 'rent',
+                    description: '6 Month Rent + Mess',
+                  ),
             ),
-          ),
+            SizedBox(height: kDefaultPadding),
+            _paymentCard(
+              title: 'Electricity Bill (Monthly)',
+              amount: '₹1,500',
+              onPay: () =>
+                  _startPayment(
+                    amount: 1500,
+                    type: 'electricity',
+                    description: 'Monthly Electricity Bill',
+                  ),
+            ),
+            SizedBox(height: kDefaultPadding),
+            Expanded(child: _paymentHistory()),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _paymentCard({
+    required String title,
+    required String amount,
+    required VoidCallback onPay,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 3)),
         ],
       ),
+      child: Row(
+        children: [
+          Container(
+            height: 48,
+            width: 48,
+            decoration: BoxDecoration(
+              color: kPrimaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+                Icons.account_balance_wallet, color: kPrimaryColor),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black)),
+                const SizedBox(height: 4),
+                Text(amount,
+                    style: const TextStyle(
+                        fontSize: 14, color: Colors.black54)),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            onPressed: onPay,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kPrimaryColor,
+              shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            ),
+            child: const Text('Pay'),
+          )
+        ],
+      ),
+    );
+  }
+
+
+  // -------------------- PAYMENT HISTORY --------------------
+
+  Widget _paymentHistory() {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('payments')
+          .where('userId', isEqualTo: uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Center(child: Text('No payment history'));
+        }
+
+        final docs = snapshot.data!.docs;
+
+        return ListView.builder(
+          itemCount: docs.length,
+          itemBuilder: (context, index) {
+            final data = docs[index].data() as Map<String, dynamic>;
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black12, blurRadius: 4),
+                ],
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 42,
+                    width: 42,
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child:
+                    const Icon(Icons.check_circle, color: Colors.green),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          data['type'].toString().toUpperCase(),
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Receipt: ${data['receiptNo']}',
+                          style: const TextStyle(
+                              fontSize: 12, color: Colors.black54),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '₹${data['amount']}',
+                        style: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black),
+                      ),
+                      const SizedBox(height: 6),
+                      InkWell(
+                        onTap: () => _downloadReceipt(data),
+                        child: const Text(
+                          'Download PDF',
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: kPrimaryColor,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      )
+                    ],
+                  )
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
