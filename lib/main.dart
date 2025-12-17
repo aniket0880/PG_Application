@@ -28,7 +28,7 @@ Future<void> main() async {
 // ---- ADMIN EMAIL LIST (Option A) ----
 const List<String> adminEmails = [
   "aniket.ashok2022@vitstudent.ac.in",
-  "admin2@example.com",
+  "aryansingh73321@gmail.com",
 ];
 
 class MyApp extends StatelessWidget {

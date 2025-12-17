@@ -28,7 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
   // Admin emails (case-insensitive). Replace these with your real admin emails.
   static const List<String> adminEmails = [
     'aniket.ashok2022@vitstudent.ac.in',
-    'admin2@example.com',
+    'aryansingh73321@gmail.com',
   ];
 
   @override
