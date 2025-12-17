@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:untitled/constants.dart';
+import 'package:untitled/screens/AdminScreens/admin_payment_status_screen.dart';
 import 'package:untitled/screens/home_screen/home_screen.dart'; // optional if you want a back to client home
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -58,14 +59,7 @@ class AdminHome extends StatelessWidget {
                 ),
                 SizedBox(height: 2.h),
                 // small stat row (placeholders, you can wire these to real data)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _StatCard(title: 'Students', value: '120'),
-                    _StatCard(title: 'Complaints', value: '4'),
-                    _StatCard(title: 'Pending Fees', value: '23'),
-                  ],
-                ),
+
               ],
             ),
           ),
@@ -90,31 +84,24 @@ class AdminHome extends StatelessWidget {
                       onPress: () {
                         Navigator.pushNamed(context, AdminMessMenu.routeName);
                       },
-                      iconAsset: 'assets/icons/menu.svg',
+                      iconAsset: 'assets/icons/datesheet.svg',
                       title: 'Update\nMess Menu',
                     ),
                     AdminCard(
                       onPress: () {
                         Navigator.pushNamed(context, AdminComplaints.routeName);
                       },
-                      iconAsset: 'assets/icons/complaint.svg',
+                      iconAsset: 'assets/icons/result.svg',
                       title: 'View\nComplaints',
                     ),
                     AdminCard(
                       onPress: () {
-                        Navigator.pushNamed(context, AdminPayments.routeName);
+                        Navigator.pushNamed(context, AdminPaymentStatusScreen.routeName);
                       },
-                      iconAsset: 'assets/icons/payment.svg',
+                      iconAsset: 'assets/icons/resume.svg',
                       title: 'Payment\nStatus',
                     ),
-                    AdminCard(
-                      onPress: () {
-                        // quick link to client home if needed
-                        Navigator.pushNamed(context, HomeScreen.routeName);
-                      },
-                      iconAsset: 'assets/icons/home.svg',
-                      title: 'Client\nHome',
-                    ),
+
                     AdminCard(
                       onPress: () async {
                         await FirebaseAuth.instance.signOut();

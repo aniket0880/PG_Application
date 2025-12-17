@@ -1,74 +1,116 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:sizer/sizer.dart';
+
 import 'package:untitled/constants.dart';
+import 'package:untitled/screens/Ask/help_screen.dart';
+import 'package:untitled/screens/Change_Pass/change_password_screen.dart';
 import 'package:untitled/screens/Complain/assignment_screen.dart';
 import 'package:untitled/screens/messmenu_screen/datesheet_screen.dart';
 import 'package:untitled/screens/fee_screen/fee_screen.dart';
 import 'package:untitled/screens/my_profile/my_profile.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:sizer/sizer.dart';
+
 import 'widgets/student_data.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
+
   static String routeName = 'HomeScreen';
 
   @override
   Widget build(BuildContext context) {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+
     return Scaffold(
       body: Column(
         children: [
-          //fixed height for first half
+          // ================= TOP PROFILE SECTION =================
           Container(
             width: 100.w,
             height: 40.h,
             padding: EdgeInsets.all(kDefaultPadding),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+            child: StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(uid)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (!snapshot.hasData || !snapshot.data!.exists) {
+                  return const Center(child: Text('User data not found'));
+                }
+
+                final data = snapshot.data!.data() as Map<String, dynamic>;
+
+                // ---------- SAFE DATA EXTRACTION ----------
+                final String name = data['name'] ?? '—';
+                final String regNo = data['registrationNo'] ?? '—';
+
+                final Timestamp? joinedTs = data['joinedOn'];
+                final String joinedText = joinedTs == null
+                    ? '—'
+                    : "${joinedTs.toDate().month}/${joinedTs.toDate().year}";
+
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        StudentName(
-                          studentName: 'Aryan',
+                        // ---------- LEFT SIDE TEXT ----------
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            StudentName(studentName: name),
+                            kHalfSizedBox,
+                            StudentClass(studentClass: regNo),
+                            kHalfSizedBox,
+                            StudentYear(studentYear: joinedText),
+                          ],
                         ),
-                        kHalfSizedBox,
-                        StudentClass(studentClass: 'EX:Student ID'),
-                        kHalfSizedBox,
-                        StudentYear(studentYear: 'May-June'),
+
+                        // ---------- PROFILE PICTURE ----------
+                        StudentPicture(
+                          picAddress: 'assets/images/img_2.png',
+                          onPress: () {
+                            Navigator.pushNamed(
+                              context,
+                              MyProfileScreen.routeName,
+                            );
+                          },
+                        ),
                       ],
                     ),
-                    kHalfSizedBox,
-                    StudentPicture(
-                        picAddress: 'assets/images/img.png',
-                        onPress: () {
-                          Navigator.pushNamed(
-                              context, MyProfileScreen.routeName);
-                        }),
-                  ],
-                ),
-                sizedBox,
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    
-                    StudentDataCard(
-                      onPress: () {
-                        Navigator.pushNamed(context, FeeScreen.routeName);
-                      },
-                      title: 'Fees Due',
-                      value: '600 rupees',
+
+                    sizedBox,
+
+                    // ---------- QUICK ACTION CARD ----------
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        StudentDataCard(
+                          onPress: () {
+                            Navigator.pushNamed(
+                                context, FeeScreen.routeName);
+                          },
+                          title: 'Fees Payment',
+                          value: '',
+                        ),
+                      ],
                     ),
                   ],
-                )
-              ],
+                );
+              },
             ),
           ),
 
-          // Remaining bottom section
+          // ================= BOTTOM GRID SECTION =================
           Expanded(
             child: Container(
               width: 100.w,
@@ -77,12 +119,12 @@ class HomeScreen extends StatelessWidget {
                 borderRadius: kTopBorderRadius,
               ),
               child: SingleChildScrollView(
-                physics: BouncingScrollPhysics(),
+                physics: const BouncingScrollPhysics(),
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 2.h),
                   child: Wrap(
-                    spacing: 1.h, // space between columns
-                    runSpacing: 1.5.h, // space between rows
+                    spacing: 1.h,
+                    runSpacing: 1.5.h,
                     alignment: WrapAlignment.center,
                     children: [
                       HomeCard(
@@ -93,7 +135,6 @@ class HomeScreen extends StatelessWidget {
                         icon: 'assets/icons/assignment.svg',
                         title: 'Complain',
                       ),
-
                       HomeCard(
                         onPress: () {
                           Navigator.pushNamed(
@@ -103,16 +144,24 @@ class HomeScreen extends StatelessWidget {
                         title: 'Mess Menu',
                       ),
                       HomeCard(
-                        onPress: () {},
+                        onPress: () {
+                          Navigator.pushNamed(context, HelpScreen.routeName);
+                        },
                         icon: 'assets/icons/ask.svg',
-                        title: 'Ask',
+                        title: 'Help',
                       ),
 
                       HomeCard(
-                        onPress: () {},
+                        onPress: () {
+                          Navigator.pushNamed(
+                            context,
+                            ChangePasswordScreen.routeName,
+                          );
+                        },
                         icon: 'assets/icons/lock.svg',
                         title: 'Change\nPassword',
                       ),
+
                       HomeCard(
                         onPress: () {},
                         icon: 'assets/icons/event.svg',
@@ -121,7 +170,11 @@ class HomeScreen extends StatelessWidget {
                       HomeCard(
                         onPress: () async {
                           await FirebaseAuth.instance.signOut();
-                          Navigator.pushNamedAndRemoveUntil(context, 'LoginScreen', (r) => false);
+                          Navigator.pushNamedAndRemoveUntil(
+                            context,
+                            'LoginScreen',
+                                (route) => false,
+                          );
                         },
                         icon: 'assets/icons/logout.svg',
                         title: 'Logout',
@@ -138,13 +191,15 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
+// ================= HOME GRID CARD =================
+
 class HomeCard extends StatelessWidget {
-  const HomeCard(
-      {Key? key,
-        required this.onPress,
-        required this.icon,
-        required this.title})
-      : super(key: key);
+  const HomeCard({
+    Key? key,
+    required this.onPress,
+    required this.icon,
+    required this.title,
+  }) : super(key: key);
 
   final VoidCallback onPress;
   final String icon;
@@ -166,8 +221,12 @@ class HomeCard extends StatelessWidget {
           children: [
             SvgPicture.asset(
               icon,
-              height: SizerUtil.deviceType == DeviceType.tablet ? 28.sp : 36.sp,
-              width: SizerUtil.deviceType == DeviceType.tablet ? 28.sp : 36.sp,
+              height: SizerUtil.deviceType == DeviceType.tablet
+                  ? 28.sp
+                  : 36.sp,
+              width: SizerUtil.deviceType == DeviceType.tablet
+                  ? 28.sp
+                  : 36.sp,
               color: kOtherColor,
             ),
             SizedBox(height: 1.h),

@@ -1,6 +1,8 @@
-import 'package:untitled/constants.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'package:untitled/constants.dart';
 
 class MyProfileScreen extends StatelessWidget {
   const MyProfileScreen({Key? key}) : super(key: key);
@@ -8,204 +10,208 @@ class MyProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+
     return Scaffold(
-      //app bar theme for tablet
       appBar: AppBar(
-        title: Text('My Profile'),
+        title: const Text('My Profile'),
         actions: [
-          InkWell(
-            onTap: () {
-              //send report to school management, in case if you want some changes to your profile
+          TextButton.icon(
+            onPressed: () {
+              // later: report profile issue
             },
-            child: Container(
-              padding: EdgeInsets.only(right: kDefaultPadding / 2),
-              child: Row(
-                children: [
-                  Icon(Icons.report_gmailerrorred_outlined),
-                  kHalfWidthSizedBox,
-                  Text(
-                    'Report',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                ],
-              ),
-            ),
+            icon: const Icon(Icons.report_gmailerrorred_outlined, color: Colors.white),
+            label: const Text('Report', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
-      body: Container(
-        color: kOtherColor,
-        child: Column(
-          children: [
-            Container(
-              width: 100.w,
-              height: SizerUtil.deviceType == DeviceType.tablet ? 19.h : 15.h,
-              decoration: BoxDecoration(
-                color: kPrimaryColor,
-                borderRadius: kBottomBorderRadius,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircleAvatar(
-                    radius:
-                        SizerUtil.deviceType == DeviceType.tablet ? 12.w : 13.w,
-                    backgroundColor: kSecondaryColor,
-                    backgroundImage:
-                        AssetImage('assets/images/img.png'),
+
+      //  Fetch user data from Firestore
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .snapshots(),
+        builder: (context, snapshot) {
+
+          // Loading state
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || !snapshot.data!.exists) {
+            return const Center(child: Text('Profile not found'));
+          }
+
+          final data = snapshot.data!.data() as Map<String, dynamic>;
+
+          final String name = data['name'] ?? '—';
+          final String email = data['email'] ?? '—';
+          final String phone = data['phone'] ?? '—';
+          final String regNo = data['registrationNo'] ?? '—';
+
+          final Timestamp? joinedTs = data['joinedOn'];
+
+          final String joinedOn = joinedTs == null
+              ? 'Not available'
+              : "${joinedTs.toDate().day.toString().padLeft(2, '0')}/"
+              "${joinedTs.toDate().month.toString().padLeft(2, '0')}/"
+              "${joinedTs.toDate().year}";
+
+
+          return Container(
+            color: kOtherColor,
+            child: Column(
+              children: [
+
+                // ================= HEADER =================
+                Container(
+                  width: 100.w,
+                  height: 13.h, // reduced height
+                  padding: EdgeInsets.symmetric(horizontal: 5.w),
+                  decoration: BoxDecoration(
+                    color: kPrimaryColor,
+                    borderRadius: kBottomBorderRadius,
                   ),
-                  kWidthSizedBox,
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: Row(
                     children: [
-                      Text(
-                        'Aryan singh',
-                        style: Theme.of(context).textTheme.titleMedium,
+                      CircleAvatar(
+                        radius: 9.w,
+                        backgroundColor: Colors.white,
+                        backgroundImage: const AssetImage('assets/images/'),
                       ),
-                      Text('Class X-II A | Roll no: 12',
-                          style: Theme.of(context).textTheme.titleSmall),
+                      SizedBox(width: 4.w),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name,
+                            style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            email,
+                            style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      )
                     ],
-                  )
-                ],
-              ),
-            ),
-            sizedBox,
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                ProfileDetailRow(
-                    title: 'Registration Number', value: '2020-ASDF-2021'),
-                ProfileDetailRow(title: 'Academic Year', value: '2020-2021'),
+                  ),
+                ),
+
+                SizedBox(height: 2.h),
+
+                // ================= BASIC INFO CARD =================
+                _infoCard(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _profileItem(
+                        title: 'Registration No',
+                        value: regNo,
+                      ),
+                      _profileItem(
+                        title: 'Joined On',
+                        value: joinedOn,
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ================= CONTACT INFO =================
+                _infoCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _profileColumn(title: 'Email', value: email),
+                      SizedBox(height: 1.5.h),
+                      _profileColumn(title: 'Phone Number', value: phone),
+                    ],
+                  ),
+                ),
               ],
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                ProfileDetailRow(title: 'Admission Class', value: 'X-II'),
-                ProfileDetailRow(title: 'Admission Number', value: '000126'),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                ProfileDetailRow(
-                    title: 'Date of Admission', value: '1 Aug, 2020'),
-                ProfileDetailRow(title: 'Date of Birth', value: '3 May 1998'),
-              ],
-            ),
-            sizedBox,
-            ProfileDetailColumn(
-              title: 'Email',
-              value: 'aisha12@gmail.com',
-            ),
-            ProfileDetailColumn(
-              title: 'Father Name',
-              value: 'John Mirza',
-            ),
-            ProfileDetailColumn(
-              title: 'Mother Name',
-              value: 'Angelica Mirza',
-            ),
-            ProfileDetailColumn(
-              title: 'Phone Number',
-              value: '+923066666666',
-            ),
-          ],
+          );
+        },
+      ),
+    );
+  }
+
+  // ================= REUSABLE CARD =================
+  static Widget _infoCard({required Widget child}) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.h),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 6,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  // ================= SMALL ROW ITEM =================
+  static Widget _profileItem({
+    required String title,
+    required String value,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(fontSize: 10.sp, color: Colors.black54),
         ),
-      ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 11.sp,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
+      ],
     );
   }
-}
 
-class ProfileDetailRow extends StatelessWidget {
-  const ProfileDetailRow({Key? key, required this.title, required this.value})
-      : super(key: key);
-  final String title;
-  final String value;
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 40.w,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                      color: kTextBlackColor,
-                      fontSize: SizerUtil.deviceType == DeviceType.tablet
-                          ? 7.sp
-                          : 9.sp,
-                    ),
-              ),
-              kHalfSizedBox,
-              Text(value, style: Theme.of(context).textTheme.bodySmall),
-              kHalfSizedBox,
-              SizedBox(
-                width: 35.w,
-                child: Divider(
-                  thickness: 1.0,
-                ),
-              ),
-            ],
+  // ================= COLUMN ITEM =================
+  static Widget _profileColumn({
+    required String title,
+    required String value,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(fontSize: 10.sp, color: Colors.black54),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 12.sp,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
           ),
-          Icon(
-            Icons.lock_outline,
-            size: 10.sp,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class ProfileDetailColumn extends StatelessWidget {
-  const ProfileDetailColumn(
-      {Key? key, required this.title, required this.value})
-      : super(key: key);
-  final String title;
-  final String value;
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                      color: kTextBlackColor,
-                      fontSize: SizerUtil.deviceType == DeviceType.tablet
-                          ? 7.sp
-                          : 11.sp,
-                    ),
-              ),
-              kHalfSizedBox,
-              Text(value, style: Theme.of(context).textTheme.bodySmall),
-              kHalfSizedBox,
-              SizedBox(
-                width: 92.w,
-                child: Divider(
-                  thickness: 1.0,
-                ),
-              )
-            ],
-          ),
-          Icon(
-            Icons.lock_outline,
-            size: 10.sp,
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 6),
+        const Divider(),
+      ],
     );
   }
 }

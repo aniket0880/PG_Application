@@ -45,11 +45,25 @@ class _FeeScreenState extends State<FeeScreen> {
 
   Future<void> _handleSuccess(PaymentSuccessResponse response) async {
     final user = FirebaseAuth.instance.currentUser;
-
     if (user == null) return;
 
+    // 🔹 fetch user's registration number
+    final userDoc = await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .get();
+
+    final regNo = userDoc.data()?['registrationNo'];
+
+    if (regNo == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registration number not found')),
+      );
+      return;
+    }
+
     await _firestore.collection('payments').add({
-      'userId': user.uid,
+      'registrationNo': regNo, // ✅ IMPORTANT
       'type': _currentPaymentType,
       'amount': _currentAmount,
       'razorpayPaymentId': response.paymentId,
@@ -64,6 +78,7 @@ class _FeeScreenState extends State<FeeScreen> {
       const SnackBar(content: Text('Payment Successful')),
     );
   }
+
 
   void _handleError(PaymentFailureResponse response) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -198,38 +213,55 @@ class _FeeScreenState extends State<FeeScreen> {
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 3)),
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
         ],
       ),
       child: Row(
         children: [
           Container(
-            height: 48,
-            width: 48,
+            height: 50,
+            width: 50,
             decoration: BoxDecoration(
-              color: kPrimaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: kPrimaryColor.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: const Icon(
-                Icons.account_balance_wallet, color: kPrimaryColor),
+              Icons.account_balance_wallet,
+              color: kPrimaryColor,
+              size: 26,
+            ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: const TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black)),
-                const SizedBox(height: 4),
-                Text(amount,
-                    style: const TextStyle(
-                        fontSize: 14, color: Colors.black54)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  amount,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black54,
+                  ),
+                ),
               ],
             ),
           ),
@@ -237,10 +269,17 @@ class _FeeScreenState extends State<FeeScreen> {
             onPressed: onPay,
             style: ElevatedButton.styleFrom(
               backgroundColor: kPrimaryColor,
-              shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
             ),
-            child: const Text('Pay'),
+            child: const Text(
+              'Pay',
+              style: TextStyle(fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black),
+            ),
           )
         ],
       ),
@@ -253,96 +292,124 @@ class _FeeScreenState extends State<FeeScreen> {
   Widget _paymentHistory() {
     final uid = FirebaseAuth.instance.currentUser!.uid;
 
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('payments')
-          .where('userId', isEqualTo: uid)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+    return FutureBuilder<DocumentSnapshot>(
+      future: FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get(),
+      builder: (context, userSnap) {
+        if (!userSnap.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(child: Text('No payment history'));
-        }
+        final regNo = userSnap.data!['registrationNo'];
 
-        final docs = snapshot.data!.docs;
+        return StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('payments')
+              .where('registrationNo', isEqualTo: regNo)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-        return ListView.builder(
-          itemCount: docs.length,
-          itemBuilder: (context, index) {
-            final data = docs[index].data() as Map<String, dynamic>;
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return const Center(child: Text('No payment history'));
+            }
 
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black12, blurRadius: 4),
-                ],
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    height: 42,
-                    width: 42,
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child:
-                    const Icon(Icons.check_circle, color: Colors.green),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          data['type'].toString().toUpperCase(),
-                          style: const TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Receipt: ${data['receiptNo']}',
-                          style: const TextStyle(
-                              fontSize: 12, color: Colors.black54),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '₹${data['amount']}',
-                        style: const TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black),
-                      ),
-                      const SizedBox(height: 6),
-                      InkWell(
-                        onTap: () => _downloadReceipt(data),
-                        child: const Text(
-                          'Download PDF',
-                          style: TextStyle(
-                              fontSize: 12,
-                              color: kPrimaryColor,
-                              fontWeight: FontWeight.w600),
-                        ),
-                      )
-                    ],
-                  )
-                ],
-              ),
+            final docs = snapshot.data!.docs;
+
+            return ListView.builder(
+              itemCount: docs.length,
+              itemBuilder: (context, index) {
+                final data = docs[index].data() as Map<String, dynamic>;
+
+                return _paymentTile(data);
+              },
             );
           },
         );
       },
+    );
+  }
+
+  Widget _paymentTile(Map<String, dynamic> data) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(color: Colors.black12, blurRadius: 6),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 46,
+            width: 46,
+            decoration: BoxDecoration(
+              color: Colors.green.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.check_circle,
+              color: Colors.green,
+              size: 26,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  data['type'].toString().toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,color: Colors.black
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Receipt: ${data['receiptNo']}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.black54,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '₹${data['amount']}',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () => _downloadReceipt(data), // ✅ NOW WORKS
+                child: const Text(
+                  'Download PDF',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: kPrimaryColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

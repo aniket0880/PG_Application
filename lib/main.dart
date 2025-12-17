@@ -37,7 +37,7 @@ class MyApp extends StatelessWidget {
     return Sizer(builder: (context, orientation, device) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Aryan PG',
+        title: 'Sri Ram Girls PG',
         theme: CustomTheme().baseTheme,
         routes: routes,
         home: AuthGate(),
